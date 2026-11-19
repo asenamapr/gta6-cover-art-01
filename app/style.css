@@ -149,6 +149,26 @@ input[type=range] { width: 100%; accent-color: #ff5e8a; margin-top: 6px; }
 .stage canvas:active { cursor: grabbing; }
 .stage-note { margin: 10px 0 0; color: #b9a8d4; font-size: 12.5px; text-align: center; }
 
+/* Round 3: sticker picker + sticker controls + text-effect pickers. */
+.sticker-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 6px; }
+.sticker-btn {
+  font: inherit; font-size: 12px; font-weight: 700;
+  padding: 8px 4px; border-radius: 8px;
+  border: 1px solid #5b3a86; background: #241640; color: #e8dcff;
+  cursor: pointer;
+}
+.sticker-btn:hover { border-color: #ffe259; color: #fff; }
+.sticker-ops { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+.sticker-ops button {
+  font: inherit; font-size: 12px; font-weight: 700;
+  padding: 6px 10px; border-radius: 999px;
+  border: 1px solid #5b3a86; background: #241640; color: #e8dcff;
+  cursor: pointer;
+}
+.sticker-ops button:hover:not(:disabled) { border-color: #ff5e8a; color: #fff; }
+.sticker-ops button:disabled { opacity: 0.4; cursor: default; }
+#export-batch { background: linear-gradient(90deg, #7b2ff7, #00e5ff); }
+
 /* Cover-only shot: poster fills the whole window, controls hidden. */
 body.shot-cover .topbar, body.shot-cover .controls, body.shot-cover .stage-note { display: none; }
 body.shot-cover .app { padding: 0; }

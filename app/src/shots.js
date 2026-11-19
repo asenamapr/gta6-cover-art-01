@@ -2,15 +2,19 @@
 // shows the full studio with a photo loaded. Extra params pin the scene:
 //   photo=boulevard,pier,neon-street  (sample keys, one per photo slot)
 //   caption=BOULEVARD QUEEN  sub=VICE CITY SUMMER
-//   layout=hero|triptych|grid|duo|center|magazine
+//   layout=hero|triptych|grid|duo|center|magazine|boulevard|wanted|backcover
 //   grade=sunset|neon|dusk|hotpink|teal|gold
-//   size=square|portrait|wide  titlepos=band|top|center  spacing=0..12
+//   size=square|portrait|wide|story  titlepos=band|top|center  spacing=0..12
+//   effect=none|vice-glow|sunset-outline|chrome|neon-sign|gold-foil|retro-shadow|candy-pop|arch-vice|arch-gold
+//   subeffect=<same list>  stickers=palm,sunburst,wanted  (Round 3 sticker ids)
 // window.__shotReady is set once the scene is painted.
 import { defaultPanels } from './cover.js';
+import { createSticker } from './stickers.js';
+import { EFFECT_PRESETS } from './effects.js';
 
-const LAYOUT_KEYS = ['hero', 'triptych', 'grid', 'duo', 'center', 'magazine'];
+const LAYOUT_KEYS = ['hero', 'triptych', 'grid', 'duo', 'center', 'magazine', 'boulevard', 'wanted', 'backcover'];
 const GRADE_KEYS = ['sunset', 'neon', 'dusk', 'hotpink', 'teal', 'gold'];
-const SIZE_KEYS = ['square', 'portrait', 'wide'];
+const SIZE_KEYS = ['square', 'portrait', 'wide', 'story'];
 const TITLEPOS_KEYS = ['band', 'top', 'center'];
 
 export async function runShot(query, api) {
@@ -56,6 +60,29 @@ export async function runShot(query, api) {
     if (input) input.value = sub;
   }
 
+  // Round 3: deterministic text effects and stickers for the new screenshots.
+  const effect = query.get('effect');
+  if (effect && EFFECT_PRESETS[effect]) state.textEffects.title = effect;
+  const subEffect = query.get('subeffect');
+  if (subEffect && EFFECT_PRESETS[subEffect]) state.textEffects.sub = subEffect;
+  const stickers = query.get('stickers');
+  if (stickers) {
+    state.stickers = [];
+    stickers.split(',').forEach((token, i) => {
+      // Each token is `id` or `id:x:y` with x/y as fractions of the poster,
+      // so a shot can park a sticker clear of the poster's text.
+      const [id, xs, ys] = token.trim().split(':');
+      const st = createSticker(id, i);
+      if (!st) return;
+      const px = Number(xs);
+      const py = Number(ys);
+      if (Number.isFinite(px)) st.x = Math.max(0.02, Math.min(0.98, px));
+      if (Number.isFinite(py)) st.y = Math.max(0.02, Math.min(0.98, py));
+      state.stickers.push(st);
+    });
+    state.selectedSticker = state.stickers.length ? 0 : -1;
+  }
+
   const photos = (query.get('photo') || 'boulevard,pier,neon-street').split(',');
   for (let slot = 0; slot < Math.min(3, photos.length); slot++) {
     const key = photos[slot].trim();
@@ -75,6 +102,15 @@ export async function runShot(query, api) {
 
   syncPickers();
   syncPanelControls();
+  if (api.syncStickerPanel) api.syncStickerPanel();
+  if (api.syncEffectPickers) api.syncEffectPickers();
+  // Editor shots can pin the controls column on a panel group, e.g.
+  // scrollto=group-effects shows the new Round 3 panels.
+  const scrollto = query.get('scrollto');
+  if (scrollto) {
+    const el = document.getElementById(scrollto);
+    if (el) el.scrollIntoView({ block: 'start' });
+  }
   if (document.fonts && document.fonts.load) {
     try {
       await document.fonts.load('16px Anton');

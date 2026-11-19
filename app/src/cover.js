@@ -5,8 +5,15 @@
 // Round 2 adds: Center Stage (single-panel hero) and Magazine (editorial
 // feature) layouts, Vice Teal and Gold Rush grades, title position presets
 // (band / overlay top / overlay centre) and adjustable title letter-spacing.
+// Round 3 wiring: extra layouts (Boulevard / Wanted / Back Cover) delegate
+// to layouts-extra.js, stickers from stickers.js draw over every poster, and
+// the title/sub use the text-effects engine from effects.js.
 // Nothing here copies Rockstar art, logos or fonts: the display face is Anton
 // (SIL OFL), shipped under app/fonts/.
+
+import { drawExtraCover, isExtraLayout, extraPanelRects, extraDefaultPanels } from './layouts-extra.js';
+import { drawStickers } from './stickers.js';
+import { effectFor, titleGradient, applyEffectToCtx, drawArchText } from './effects.js';
 
 export const GRADES = {
   sunset: {
@@ -72,10 +79,13 @@ export const SIZES = {
   square: { label: '1080 x 1080', w: 1080, h: 1080 },
   portrait: { label: '1080 x 1350', w: 1080, h: 1350 },
   wide: { label: '1920 x 1080', w: 1920, h: 1080 },
+  story: { label: '1080 x 1920', w: 1080, h: 1920 },
 };
 
 // Panel rectangles for a layout, inside the photo zone (top 80% of the poster).
 export function panelRects(layout, w, h) {
+  const extra = extraPanelRects(layout, w, h);
+  if (extra) return extra;
   const ph = h * 0.8;
   const g = Math.max(4, Math.round(w * 0.008));
   if (layout === 'hero') {
@@ -127,6 +137,8 @@ export function panelRects(layout, w, h) {
 
 // Default panel assignments: which photo slot each panel shows.
 export function defaultPanels(layout) {
+  const extra = extraDefaultPanels(layout);
+  if (extra) return extra;
   const picks = {
     hero: [0, 1],
     triptych: [0, 1, 2],
@@ -224,7 +236,7 @@ function drawRetroSun(ctx, cx, cy, r, grade) {
 // shadow. `at` picks where it sits: 'band' (in the caption band, default),
 // 'top' (over the photo zone, under the studio tag) or 'center' (centred
 // over the photo zone on a soft dark scrim). `spacing` is extra tracking in px.
-function drawTitle(ctx, text, w, h, grade, at = 'band', spacing = 0, bandTop = h * 0.8) {
+function drawTitle(ctx, text, w, h, grade, at = 'band', spacing = 0, bandTop = h * 0.8, fx = null) {
   const clean = (text || '').trim().toUpperCase() || 'YOUR STORY';
   let size = h * 0.088;
   if (at !== 'band') size = h * 0.105;
@@ -256,19 +268,37 @@ function drawTitle(ctx, text, w, h, grade, at = 'band', spacing = 0, bandTop = h
     x = w / 2;
     y = h * 0.5;
   }
-  const grad = ctx.createLinearGradient(x, y - size, x, y + size * 0.2);
-  grad.addColorStop(0, '#ffffff');
-  grad.addColorStop(0.55, '#ffe259');
-  grad.addColorStop(1, grade.stops[1]);
+  // Round 3: an arch preset bends the title along a curve instead of a
+  // straight baseline; the arch painter applies the same preset itself.
+  if (fx && fx.arch) {
+    const cy = at === 'top' ? h * 0.3 : at === 'center' ? h * 0.52 : bandTop + (h - bandTop) * 0.55;
+    // The arch centre sits one radius below the arc's top, so the title
+    // lands on `cy` instead of a radius above the poster.
+    drawArchText(ctx, clean, w / 2, cy + w * 0.75, w * 0.75, size, grade, fx);
+    try { ctx.letterSpacing = '0px'; } catch { /* older canvas */ }
+    return { size, y };
+  }
+  const grad = fx
+    ? titleGradient(ctx, fx, grade, x, y, size)
+    : (() => {
+      const g = ctx.createLinearGradient(x, y - size, x, y + size * 0.2);
+      g.addColorStop(0, '#ffffff');
+      g.addColorStop(0.55, '#ffe259');
+      g.addColorStop(1, grade.stops[1]);
+      return g;
+    })();
   ctx.save();
   ctx.textAlign = align;
   ctx.textBaseline = 'alphabetic';
   ctx.lineJoin = 'round';
-  ctx.strokeStyle = '#1a0b2e';
-  ctx.lineWidth = Math.max(2, size * 0.1);
-  ctx.shadowColor = 'rgba(0,0,0,0.55)';
-  ctx.shadowBlur = size * 0.16;
-  ctx.shadowOffsetY = size * 0.05;
+  if (fx) applyEffectToCtx(ctx, fx, size);
+  else {
+    ctx.strokeStyle = '#1a0b2e';
+    ctx.lineWidth = Math.max(2, size * 0.1);
+    ctx.shadowColor = 'rgba(0,0,0,0.55)';
+    ctx.shadowBlur = size * 0.16;
+    ctx.shadowOffsetY = size * 0.05;
+  }
   ctx.strokeText(clean, x, y);
   ctx.fillStyle = grad;
   ctx.fillText(clean, x, y);
@@ -277,7 +307,7 @@ function drawTitle(ctx, text, w, h, grade, at = 'band', spacing = 0, bandTop = h
   return { size, y };
 }
 
-function drawSubCaption(ctx, text, w, h, grade, titleSize, titleY, at = 'band', bandTop = h * 0.8) {
+function drawSubCaption(ctx, text, w, h, grade, titleSize, titleY, at = 'band', bandTop = h * 0.8, fxSub = null) {
   const clean = (text || '').trim().toUpperCase();
   if (!clean) return;
   let size = h * 0.026;
@@ -298,7 +328,7 @@ function drawSubCaption(ctx, text, w, h, grade, titleSize, titleY, at = 'band', 
     setFont();
   }
   ctx.fillStyle = '#ffffff';
-  ctx.shadowColor = grade.accent;
+  ctx.shadowColor = fxSub && fxSub.glow > 0 ? fxSub.glowColor : grade.accent;
   ctx.shadowBlur = size * 0.6;
   const x = at === 'center' ? w / 2 : w * 0.045;
   const y = at === 'band'
@@ -345,6 +375,18 @@ export function drawPoster(canvas, state) {
   const w = canvas.width;
   const h = canvas.height;
   const grade = GRADES[state.grade] || GRADES.sunset;
+  const fxTitle = effectFor(state, 'title');
+  const fxSub = effectFor(state, 'sub');
+  // Round 3: extra layouts render through layouts-extra.js, then get the
+  // same stickers and frame as the classic layouts.
+  if (isExtraLayout(state.layout)) {
+    drawExtraCover(ctx, state, grade, w, h, fxTitle, fxSub);
+    drawStickers(ctx, state.stickers, w, h, grade);
+    ctx.strokeStyle = 'rgba(255,255,255,0.9)';
+    ctx.lineWidth = Math.max(3, w * 0.004);
+    ctx.strokeRect(ctx.lineWidth / 2, ctx.lineWidth / 2, w - ctx.lineWidth, h - ctx.lineWidth);
+    return;
+  }
   const rects = panelRects(state.layout, w, h);
   const panels = state.panels || defaultPanels(state.layout);
   const titlePos = TITLE_POSITIONS[state.titlePos] ? state.titlePos : 'band';
@@ -407,9 +449,11 @@ export function drawPoster(canvas, state) {
   // Overlay title positions sit above the photo zone; the band title keeps
   // the retro sun beside it, overlay titles leave the band to the sub-caption.
   if (titlePos === 'band') drawRetroSun(ctx, w * 0.93, ph + (h - ph) * 0.52, (h - ph) * 0.34, grade);
-  const { size: titleSize, y: titleY } = drawTitle(ctx, state.title, w, h, grade, titlePos, spacing, ph);
-  drawSubCaption(ctx, state.sub, w, h, grade, titleSize, titleY, titlePos, ph);
+  const { size: titleSize, y: titleY } = drawTitle(ctx, state.title, w, h, grade, titlePos, spacing, ph, fxTitle);
+  drawSubCaption(ctx, state.sub, w, h, grade, titleSize, titleY, titlePos, ph, fxSub);
   drawTag(ctx, w, h, grade);
+  // Round 3: stickers draw over the finished poster, in preview and export.
+  drawStickers(ctx, state.stickers, w, h, grade);
 
   // Film grain over the whole poster, then a thin white frame.
   const tile = getGrainTile();

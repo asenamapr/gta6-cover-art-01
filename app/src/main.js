@@ -6,6 +6,10 @@
 // Photos never leave the machine: uploads are read with object URLs only.
 import { drawPoster, defaultPanels, GRADES, LAYOUTS, SIZES, TITLE_POSITIONS } from './cover.js';
 import { runShot } from './shots.js';
+import { EXTRA_LAYOUTS } from './layouts-extra.js';
+import { STICKERS, createSticker, hitSticker, moveSticker, rotateSticker, scaleSticker, bringForward, sendBackward, removeSticker, stickerLabel } from './stickers.js';
+import { EFFECT_PRESETS, describeEffect } from './effects.js';
+import { batchExportSet, progressText } from './export.js';
 
 const canvas = document.getElementById('cover');
 const captionInput = document.getElementById('caption');
@@ -33,6 +37,9 @@ const state = {
   titlePos: 'band',
   titleSpacing: 2,
   activePanel: 0,
+  stickers: [],
+  selectedSticker: -1,
+  textEffects: { title: 'vice-glow', sub: 'none' },
 };
 
 function redraw() {
@@ -123,7 +130,7 @@ function buildButtons(containerId, entries, current, onPick) {
 }
 
 function syncPickers() {
-  buildButtons('layout-picks', LAYOUTS, state.layout, (key) => {
+  buildButtons('layout-picks', { ...LAYOUTS, ...EXTRA_LAYOUTS }, state.layout, (key) => {
     state.layout = key;
     state.panels = defaultPanels(key);
     state.activePanel = 0;
@@ -146,6 +153,92 @@ function syncPickers() {
     syncPickers();
     redraw();
   });
+}
+
+// Round 3: sticker picker + selected-sticker controls.
+function syncStickerPanel() {
+  const grid = document.getElementById('sticker-grid');
+  if (!grid) return;
+  grid.innerHTML = '';
+  STICKERS.forEach((def) => {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'sticker-btn';
+    b.textContent = def.label;
+    b.title = def.hint;
+    b.addEventListener('click', () => {
+      const st = createSticker(def.id, state.stickers.length);
+      if (!st) return;
+      state.stickers.push(st);
+      state.selectedSticker = state.stickers.length - 1;
+      syncStickerPanel();
+      redraw();
+    });
+    grid.appendChild(b);
+  });
+  const sel = document.getElementById('sticker-selected');
+  const picked = state.stickers[state.selectedSticker];
+  if (sel) sel.textContent = picked ? stickerLabel(picked.id) + ` — ${Math.round(picked.size * 100)}% · ${picked.rot}°` : 'None — tap a sticker to add it, or tap one on the poster.';
+  document.querySelectorAll('[data-sticker-op]').forEach((b) => {
+    b.disabled = !picked;
+  });
+}
+
+function stickerOp(op) {
+  const i = state.selectedSticker;
+  const st = state.stickers[i];
+  if (!st) return;
+  if (op === 'rot-left') rotateSticker(st, -15);
+  else if (op === 'rot-right') rotateSticker(st, 15);
+  else if (op === 'bigger') scaleSticker(st, 1.2);
+  else if (op === 'smaller') scaleSticker(st, 1 / 1.2);
+  else if (op === 'flip') st.flip = !st.flip;
+  else if (op === 'forward') state.selectedSticker = bringForward(state.stickers, i);
+  else if (op === 'backward') state.selectedSticker = sendBackward(state.stickers, i);
+  else if (op === 'delete') {
+    removeSticker(state.stickers, i);
+    state.selectedSticker = -1;
+  }
+  syncStickerPanel();
+  redraw();
+}
+
+// Round 3: per-element text-effect pickers (title + sub-caption).
+function syncEffectPickers() {
+  const titleBox = document.getElementById('title-effect-picks');
+  if (titleBox) {
+    titleBox.innerHTML = '';
+    Object.entries(EFFECT_PRESETS).forEach(([key, def]) => {
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'pick' + (key === state.textEffects.title ? ' active' : '');
+      b.textContent = def.label;
+      b.addEventListener('click', () => {
+        state.textEffects.title = key;
+        status.textContent = 'Title effect: ' + describeEffect(key) + '.';
+        syncEffectPickers();
+        redraw();
+      });
+      titleBox.appendChild(b);
+    });
+  }
+  const subBox = document.getElementById('sub-effect-picks');
+  if (subBox) {
+    subBox.innerHTML = '';
+    Object.entries(EFFECT_PRESETS).forEach(([key, def]) => {
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'pick' + (key === state.textEffects.sub ? ' active' : '');
+      b.textContent = def.label;
+      b.addEventListener('click', () => {
+        state.textEffects.sub = key;
+        status.textContent = 'Sub-caption effect: ' + describeEffect(key) + '.';
+        syncEffectPickers();
+        redraw();
+      });
+      subBox.appendChild(b);
+    });
+  }
 }
 
 // Photo slots: file upload + one-click sample scenes.
@@ -204,15 +297,36 @@ document.getElementById('panel-oy').addEventListener('input', (e) => {
   redraw();
 });
 
-// Drag on the preview pans the active panel's photo.
+// Drag on the preview: a sticker under the pointer moves; otherwise the
+// active panel's photo pans.
 let drag = null;
+let dragSticker = -1;
 canvas.addEventListener('pointerdown', (e) => {
-  drag = { x: e.clientX, y: e.clientY, ox: state.panels[state.activePanel].ox, oy: state.panels[state.activePanel].oy };
+  const rect = canvas.getBoundingClientRect();
+  const fx = (e.clientX - rect.left) / rect.width;
+  const fy = (e.clientY - rect.top) / rect.height;
+  dragSticker = hitSticker(state.stickers, fx, fy, canvas.width, canvas.height);
+  if (dragSticker >= 0) {
+    state.selectedSticker = dragSticker;
+    syncStickerPanel();
+    const st = state.stickers[dragSticker];
+    drag = { sticker: true, x: e.clientX, y: e.clientY, sx: st.x, sy: st.y };
+  } else {
+    drag = { sticker: false, x: e.clientX, y: e.clientY, ox: state.panels[state.activePanel].ox, oy: state.panels[state.activePanel].oy };
+  }
   canvas.setPointerCapture(e.pointerId);
 });
 canvas.addEventListener('pointermove', (e) => {
   if (!drag) return;
   const rect = canvas.getBoundingClientRect();
+  if (drag.sticker) {
+    const st = state.stickers[dragSticker];
+    if (!st) return;
+    moveSticker(st, (e.clientX - drag.x) / rect.width, (e.clientY - drag.y) / rect.height);
+    syncStickerPanel();
+    redraw();
+    return;
+  }
   const panel = state.panels[state.activePanel];
   panel.ox = Math.max(-1, Math.min(1, drag.ox - ((e.clientX - drag.x) / rect.width) * 2));
   panel.oy = Math.max(-1, Math.min(1, drag.oy - ((e.clientY - drag.y) / rect.height) * 2));
@@ -221,6 +335,11 @@ canvas.addEventListener('pointermove', (e) => {
 });
 canvas.addEventListener('pointerup', () => {
   drag = null;
+  dragSticker = -1;
+});
+
+document.querySelectorAll('[data-sticker-op]').forEach((b) => {
+  b.addEventListener('click', () => stickerOp(b.dataset.stickerOp));
 });
 
 // One click per size: render the poster at full export size and download it.
@@ -249,12 +368,31 @@ document.querySelectorAll('[data-export]').forEach((b) => {
   b.addEventListener('click', () => exportPng(b.dataset.export));
 });
 
+// Round 3: batch export — all sizes + story preset, sequential, with progress.
+const batchBtn = document.getElementById('export-batch');
+if (batchBtn) {
+  batchBtn.addEventListener('click', async () => {
+    batchBtn.disabled = true;
+    status.textContent = 'Batch export started — 4 files…';
+    const results = await batchExportSet(state, drawPoster, 'all', (p) => {
+      status.textContent = progressText(p);
+    });
+    const ok = results.filter((r) => r.ok).length;
+    status.textContent = ok === results.length
+      ? `Batch done — ${ok} PNGs saved (1080×1080, 1080×1350, 1920×1080, 1080×1920 story).`
+      : `Batch finished with ${results.length - ok} failure(s) — ${ok} PNGs saved.`;
+    batchBtn.disabled = false;
+  });
+}
+
 async function boot() {
   syncPickers();
   syncPhotoSlots();
+  syncStickerPanel();
+  syncEffectPickers();
   const query = new URLSearchParams(location.search);
   if (query.get('shot')) {
-    await runShot(query, { loadImage, loadSampleIntoSlot, state, redraw, syncPickers, syncPanelControls });
+    await runShot(query, { loadImage, loadSampleIntoSlot, state, redraw, syncPickers, syncPanelControls, syncStickerPanel, syncEffectPickers });
   } else {
     // First visit: fill the three slots with the sample scenes so the poster
     // is alive before any upload.

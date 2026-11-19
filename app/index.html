@@ -41,7 +41,7 @@
 
     <div class="group">
       <h2>2 · Layout</h2>
-      <p class="hint">Six layouts — Center Stage is one full-bleed hero photo, Magazine is an editorial cover spread.</p>
+      <p class="hint">Nine layouts — new in Round 3: Boulevard (cinematic widescreen), Wanted (vertical poster) and Back Cover (magazine back with barcode).</p>
       <div class="picks" id="layout-picks"></div>
     </div>
 
@@ -86,11 +86,38 @@
       <div class="picks" id="size-picks"></div>
     </div>
 
+    <div class="group" id="group-stickers">
+      <h2>7 · Stickers</h2>
+      <p class="hint">Twelve placeable stickers — tap one to drop it on the poster, then drag it, rotate it, resize it or flip it. Stickers print on the exported PNG too.</p>
+      <div class="sticker-grid" id="sticker-grid"></div>
+      <p class="slot-name" id="sticker-selected">None — tap a sticker to add it, or tap one on the poster.</p>
+      <div class="sticker-ops">
+        <button type="button" data-sticker-op="rot-left">⟲ 15°</button>
+        <button type="button" data-sticker-op="rot-right">⟳ 15°</button>
+        <button type="button" data-sticker-op="bigger">Bigger</button>
+        <button type="button" data-sticker-op="smaller">Smaller</button>
+        <button type="button" data-sticker-op="flip">Flip</button>
+        <button type="button" data-sticker-op="forward">Forward</button>
+        <button type="button" data-sticker-op="backward">Back</button>
+        <button type="button" data-sticker-op="delete">Delete</button>
+      </div>
+    </div>
+
+    <div class="group" id="group-effects">
+      <h2>8 · Text effects</h2>
+      <p class="hint">One effect per line — glow, chrome, gold foil, or an arched masthead. Live in the preview, baked into the export.</p>
+      <label>Title effect</label>
+      <div class="picks" id="title-effect-picks"></div>
+      <label>Sub-caption effect</label>
+      <div class="picks" id="sub-effect-picks"></div>
+    </div>
+
     <div class="group export">
       <h2>Export PNG</h2>
       <button id="export-square" type="button" data-export="square">Export 1080 × 1080</button>
       <button id="export-portrait" type="button" data-export="portrait">Export 1080 × 1350</button>
       <button id="export-wide" type="button" data-export="wide">Export 1920 × 1080</button>
+      <button id="export-batch" type="button">Export all sizes + story (4 PNGs)</button>
       <p id="status" role="status">Pick a photo, type a title, export your poster.</p>
     </div>
   </section>
