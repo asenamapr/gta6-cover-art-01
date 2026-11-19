@@ -12,6 +12,14 @@
     </linearGradient>
   </defs>
   <rect width="720" height="900" fill="url(#sky)"/>
+  <g fill="#ffffff" opacity="0.7">
+    <circle cx="100" cy="140" r="3"/><circle cx="220" cy="90" r="2"/><circle cx="560" cy="110" r="3"/>
+    <circle cx="640" cy="180" r="2"/><circle cx="420" cy="70" r="2"/>
+  </g>
+  <g stroke="#1c0b33" stroke-width="5" stroke-linecap="round" fill="none">
+    <path d="M180 180 q14 -14 28 0 q14 -14 28 0"/>
+    <path d="M480 140 q14 -14 28 0 q14 -14 28 0"/>
+  </g>
   <circle cx="360" cy="480" r="170" fill="#ffe259"/>
   <rect x="170" y="480" width="380" height="16" fill="#ff5e8a"/>
   <rect x="170" y="520" width="380" height="20" fill="#ff9a3d"/>
@@ -21,6 +29,10 @@
     <line x1="120" y1="680" x2="600" y2="680"/>
     <line x1="200" y1="740" x2="520" y2="740"/>
     <line x1="280" y1="810" x2="440" y2="810"/>
+  </g>
+  <g stroke="#ffe259" stroke-width="4" opacity="0.7" stroke-linecap="round">
+    <line x1="330" y1="660" x2="390" y2="660"/>
+    <line x1="300" y1="700" x2="420" y2="700"/>
   </g>
   <g fill="#1c0b33">
     <path d="M80 640 Q50 480 10 400 Q60 440 70 380 Q80 470 110 520 Q140 460 170 430 Q140 520 130 640 Z"/>

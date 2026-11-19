@@ -2,10 +2,16 @@
 // shows the full studio with a photo loaded. Extra params pin the scene:
 //   photo=boulevard,pier,neon-street  (sample keys, one per photo slot)
 //   caption=BOULEVARD QUEEN  sub=VICE CITY SUMMER
-//   layout=hero|triptych|grid|duo  grade=sunset|neon|dusk|hotpink
-//   size=square|portrait|wide
+//   layout=hero|triptych|grid|duo|center|magazine
+//   grade=sunset|neon|dusk|hotpink|teal|gold
+//   size=square|portrait|wide  titlepos=band|top|center  spacing=0..12
 // window.__shotReady is set once the scene is painted.
 import { defaultPanels } from './cover.js';
+
+const LAYOUT_KEYS = ['hero', 'triptych', 'grid', 'duo', 'center', 'magazine'];
+const GRADE_KEYS = ['sunset', 'neon', 'dusk', 'hotpink', 'teal', 'gold'];
+const SIZE_KEYS = ['square', 'portrait', 'wide'];
+const TITLEPOS_KEYS = ['band', 'top', 'center'];
 
 export async function runShot(query, api) {
   const { loadSampleIntoSlot, state, redraw, syncPickers, syncPanelControls } = api;
@@ -13,15 +19,29 @@ export async function runShot(query, api) {
   if (shot === 'cover') document.body.classList.add('shot-cover');
 
   const layout = query.get('layout');
-  if (layout && ['hero', 'triptych', 'grid', 'duo'].includes(layout)) {
+  if (layout && LAYOUT_KEYS.includes(layout)) {
     state.layout = layout;
     state.panels = defaultPanels(layout);
     state.activePanel = 0;
   }
   const grade = query.get('grade');
-  if (grade && ['sunset', 'neon', 'dusk', 'hotpink'].includes(grade)) state.grade = grade;
+  if (grade && GRADE_KEYS.includes(grade)) state.grade = grade;
   const size = query.get('size');
-  if (size && ['square', 'portrait', 'wide'].includes(size)) state.size = size;
+  if (size && SIZE_KEYS.includes(size)) state.size = size;
+  const titlePos = query.get('titlepos');
+  if (titlePos && TITLEPOS_KEYS.includes(titlePos)) {
+    state.titlePos = titlePos;
+    const input = document.getElementById('titlepos-picks');
+    if (input) input.dataset.value = titlePos;
+  }
+  const spacing = Number(query.get('spacing'));
+  if (Number.isFinite(spacing)) {
+    state.titleSpacing = Math.max(0, Math.min(12, spacing));
+    const slider = document.getElementById('title-spacing');
+    if (slider) slider.value = String(state.titleSpacing);
+    const val = document.getElementById('spacing-val');
+    if (val) val.textContent = state.titleSpacing + ' px';
+  }
 
   const caption = query.get('caption');
   if (caption !== null) {

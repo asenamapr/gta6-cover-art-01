@@ -1,4 +1,6 @@
 // Neon Palms Cover Studio — gta6-cover-art-01 entry program (Node 22, stdlib only).
+// Round 2 rebuild: 6 layouts, 6 colour grades, title position presets and
+// letter-spacing, plus a third illustrated sample scene (Sunset Strip).
 // The app is plain static files under app/ (index.html, ES modules, CSS, a vendored
 // OFL font and sample images) that run offline in desktop Chrome with no network
 // request. This program hands the entry in: it copies app/ and screenshots/ from
@@ -9,7 +11,7 @@
 // Outside the grader, MAKEFUN_OUTPUT_DIR stands in for /output:
 //   mkdir -p out && MAKEFUN_OUTPUT_DIR=out node main.ts
 
-import { cpSync, existsSync, mkdirSync, statSync, writeFileSync } from 'node:fs';
+import { cpSync, existsSync, mkdirSync, readdirSync, statSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { buildDossier } from './vendor/makefun-app.ts';
@@ -21,6 +23,15 @@ mkdirSync(out, { recursive: true });
 cpSync(join(here, 'app'), join(out, 'app'), { recursive: true });
 mkdirSync(join(out, 'screenshots'), { recursive: true });
 if (existsSync(join(here, 'screenshots'))) cpSync(join(here, 'screenshots'), join(out, 'screenshots'), { recursive: true });
+
+// Count what was handed in, so a silent partial copy is obvious in the log.
+function countFiles(dir) {
+  let n = 0;
+  for (const entry of readdirSync(dir, { withFileTypes: true })) {
+    n += entry.isDirectory() ? countFiles(join(dir, entry.name)) : 1;
+  }
+  return n;
+}
 
 // The scorer's caps: text_max_bytes shapes the dossier text; the other limits
 // refuse an entry the scorer would refuse (more than 4 screenshots, one over
@@ -38,6 +49,7 @@ writeFileSync(
   }),
 );
 
-// One line of proof the handoff worked, so a silent partial copy is obvious:
-// the dossier's byte size next to the output directory it describes.
-console.log(`Neon Palms Cover Studio handed in: ${out} (dossier.json ${statSync(dossierPath).size} bytes)`);
+console.log(
+  `Neon Palms Cover Studio handed in: ${out} (dossier.json ${statSync(dossierPath).size} bytes, ` +
+  `${countFiles(join(out, 'app'))} app files, ${readdirSync(join(out, 'screenshots')).length} screenshots)`,
+);

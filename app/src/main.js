@@ -1,14 +1,16 @@
-// Neon Palms Cover Studio — page wiring.
-// Owns the editor state (3 photo slots, panels, layout, grade, size, captions),
-// renders the live preview, exports real PNGs at 1080x1080 / 1080x1350 /
-// 1920x1080, and supports deterministic ?shot= scenes for screenshots.
+// Neon Palms Cover Studio — page wiring (Round 2).
+// Owns the editor state (3 photo slots, panels, layout, grade, size, captions,
+// title position + letter-spacing), renders the live preview, exports real
+// PNGs at 1080x1080 / 1080x1350 / 1920x1080, and supports deterministic
+// ?shot= scenes for screenshots.
 // Photos never leave the machine: uploads are read with object URLs only.
-import { drawPoster, defaultPanels, GRADES, LAYOUTS, SIZES } from './cover.js';
+import { drawPoster, defaultPanels, GRADES, LAYOUTS, SIZES, TITLE_POSITIONS } from './cover.js';
 import { runShot } from './shots.js';
 
 const canvas = document.getElementById('cover');
 const captionInput = document.getElementById('caption');
 const subInput = document.getElementById('subcaption');
+const spacingInput = document.getElementById('title-spacing');
 const status = document.getElementById('status');
 
 const SAMPLES = [
@@ -16,6 +18,7 @@ const SAMPLES = [
   { key: 'pier', label: 'Pier', file: 'samples/pier.jpg' },
   { key: 'neon-street', label: 'Neon Street', file: 'samples/neon-street.svg' },
   { key: 'palm-dusk', label: 'Palm Dusk', file: 'samples/palm-dusk.svg' },
+  { key: 'sunset-strip', label: 'Sunset Strip', file: 'samples/sunset-strip.svg' },
 ];
 
 const state = {
@@ -27,6 +30,8 @@ const state = {
   size: 'wide',
   title: 'BOULEVARD QUEEN',
   sub: 'VICE CITY SUMMER',
+  titlePos: 'band',
+  titleSpacing: 2,
   activePanel: 0,
 };
 
@@ -136,6 +141,11 @@ function syncPickers() {
     syncPickers();
     redraw();
   });
+  buildButtons('titlepos-picks', TITLE_POSITIONS, state.titlePos, (key) => {
+    state.titlePos = key;
+    syncPickers();
+    redraw();
+  });
 }
 
 // Photo slots: file upload + one-click sample scenes.
@@ -166,6 +176,11 @@ captionInput.addEventListener('input', () => {
 });
 subInput.addEventListener('input', () => {
   state.sub = subInput.value;
+  redraw();
+});
+spacingInput.addEventListener('input', () => {
+  state.titleSpacing = Number(spacingInput.value);
+  document.getElementById('spacing-val').textContent = spacingInput.value + ' px';
   redraw();
 });
 

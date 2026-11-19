@@ -21,7 +21,7 @@
   <section class="controls" aria-label="Cover controls">
     <div class="group">
       <h2>1 · Your photos</h2>
-      <p class="hint">Three slots. One photo can fill every panel, or each panel can show a different one.</p>
+      <p class="hint">Three slots. One photo can fill every panel, or each panel can show a different one. Five sample scenes included.</p>
       <div class="slot">
         <label>Photo 1 <input id="photo-0" type="file" accept="image/*"></label>
         <span class="slot-name" id="photo-name-0">—</span>
@@ -41,11 +41,13 @@
 
     <div class="group">
       <h2>2 · Layout</h2>
+      <p class="hint">Six layouts — Center Stage is one full-bleed hero photo, Magazine is an editorial cover spread.</p>
       <div class="picks" id="layout-picks"></div>
     </div>
 
     <div class="group">
       <h2>3 · Colour grade</h2>
+      <p class="hint">Six grades — new in Round 2: Vice Teal and Gold Rush.</p>
       <div class="picks" id="grade-picks"></div>
     </div>
 
@@ -53,6 +55,12 @@
       <h2>4 · Caption</h2>
       <label>Title <input id="caption" type="text" maxlength="32" value="BOULEVARD QUEEN"></label>
       <label>Sub-caption <input id="subcaption" type="text" maxlength="48" value="VICE CITY SUMMER"></label>
+      <label>Title position</label>
+      <div class="picks picks-three" id="titlepos-picks"></div>
+      <label>Letter spacing <span class="val" id="spacing-val">2 px</span>
+        <input id="title-spacing" type="range" min="0" max="12" step="1" value="2">
+      </label>
+      <p class="hint">Wide tracking reads like a billboard; tight tracking reads like a magazine masthead.</p>
     </div>
 
     <div class="group">

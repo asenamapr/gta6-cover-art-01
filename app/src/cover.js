@@ -1,7 +1,10 @@
-// Neon Palms Cover Studio — poster renderer.
+// Neon Palms Cover Studio — poster renderer (Round 2).
 // Draws a multi-panel GTA-style poster onto any 2D canvas: panel photos with
 // per-panel crop, a colour grade (gradient + duotone tint + vignette + grain),
 // and bold condensed display lettering with outline, gradient fill and shadow.
+// Round 2 adds: Center Stage (single-panel hero) and Magazine (editorial
+// feature) layouts, Vice Teal and Gold Rush grades, title position presets
+// (band / overlay top / overlay centre) and adjustable title letter-spacing.
 // Nothing here copies Rockstar art, logos or fonts: the display face is Anton
 // (SIL OFL), shipped under app/fonts/.
 
@@ -34,6 +37,20 @@ export const GRADES = {
     accent: '#ff2e63',
     band: ['#20041f', '#4a0a2e'],
   },
+  teal: {
+    label: 'Vice Teal',
+    stops: ['#00f5d4', '#0096c7', '#ff5e8a'],
+    tint: 'rgba(0, 245, 212, 0.10)',
+    accent: '#00f5d4',
+    band: ['#03252e', '#0a3a4a'],
+  },
+  gold: {
+    label: 'Gold Rush',
+    stops: ['#ffe259', '#ff9a3d', '#b537f2'],
+    tint: 'rgba(255, 178, 0, 0.12)',
+    accent: '#ffe259',
+    band: ['#2a1503', '#4a1a3a'],
+  },
 };
 
 export const LAYOUTS = {
@@ -41,6 +58,14 @@ export const LAYOUTS = {
   triptych: { label: 'Triptych', panels: 3 },
   grid: { label: 'Four-Panel Grid', panels: 4 },
   duo: { label: 'Duo + Strip', panels: 3 },
+  center: { label: 'Center Stage', panels: 1 },
+  magazine: { label: 'Magazine', panels: 3 },
+};
+
+export const TITLE_POSITIONS = {
+  band: { label: 'Title in band' },
+  top: { label: 'Title on top' },
+  center: { label: 'Title centered' },
 };
 
 export const SIZES = {
@@ -74,6 +99,22 @@ export function panelRects(layout, w, h) {
       { x: pw + g, y: phh + g, w: pw, h: phh },
     ];
   }
+  if (layout === 'center') {
+    // One full-bleed hero panel: the photo is the whole poster.
+    return [{ x: 0, y: 0, w, h: ph }];
+  }
+  if (layout === 'magazine') {
+    // Editorial feature: one tall cover star on the left, two stacked
+    // supporting panels on the right, like a magazine cover spread.
+    const left = Math.round(w * 0.56);
+    const right = w - left - g;
+    const top = Math.round(ph * 0.52);
+    return [
+      { x: 0, y: 0, w: left, h: ph },
+      { x: left + g, y: 0, w: right, h: top },
+      { x: left + g, y: top + g, w: right, h: ph - top - g },
+    ];
+  }
   // duo: two panels on top, one wide strip below.
   const pw = (w - g) / 2;
   const top = ph * 0.55;
@@ -91,6 +132,8 @@ export function defaultPanels(layout) {
     triptych: [0, 1, 2],
     grid: [0, 1, 2, 1],
     duo: [0, 1, 2],
+    center: [0],
+    magazine: [0, 1, 2],
   }[layout] || [0, 1, 2];
   return picks.map((photo) => ({ photo, scale: 1, ox: 0, oy: 0 }));
 }
@@ -177,28 +220,48 @@ function drawRetroSun(ctx, cx, cy, r, grade) {
   ctx.restore();
 }
 
-// Big display title: Anton, uppercase, gradient fill, dark outline, drop shadow.
-function drawTitle(ctx, text, w, h, grade) {
+// Big display title: Anton, uppercase, gradient fill, dark outline, drop
+// shadow. `at` picks where it sits: 'band' (in the caption band, default),
+// 'top' (over the photo zone, under the studio tag) or 'center' (centred
+// over the photo zone on a soft dark scrim). `spacing` is extra tracking in px.
+function drawTitle(ctx, text, w, h, grade, at = 'band', spacing = 0, bandTop = h * 0.8) {
   const clean = (text || '').trim().toUpperCase() || 'YOUR STORY';
-  const bandTop = h * 0.8;
   let size = h * 0.088;
+  if (at !== 'band') size = h * 0.105;
   const setFont = () => {
     ctx.font = `${size}px Anton, 'Arial Black', sans-serif`;
+    try { ctx.letterSpacing = `${Math.max(0, spacing)}px`; } catch { /* older canvas */ }
   };
   setFont();
-  const maxW = w * 0.86;
+  const maxW = w * (at === 'center' ? 0.9 : 0.86);
   while (ctx.measureText(clean).width > maxW && size > h * 0.02) {
     size -= 2;
     setFont();
   }
-  const x = w * 0.045;
-  const y = bandTop + h * 0.115;
+  let x = w * 0.045;
+  let y = bandTop + h * 0.115;
+  let align = 'left';
+  if (at === 'top') {
+    // Below the studio tag pill (which ends ~6% down the poster).
+    y = h * 0.2;
+  } else if (at === 'center') {
+    // Soft scrim so white lettering reads over any photo.
+    const scrim = ctx.createLinearGradient(0, h * 0.3, 0, h * 0.62);
+    scrim.addColorStop(0, 'rgba(10,4,24,0)');
+    scrim.addColorStop(0.5, 'rgba(10,4,24,0.55)');
+    scrim.addColorStop(1, 'rgba(10,4,24,0)');
+    ctx.fillStyle = scrim;
+    ctx.fillRect(0, h * 0.3, w, h * 0.32);
+    align = 'center';
+    x = w / 2;
+    y = h * 0.5;
+  }
   const grad = ctx.createLinearGradient(x, y - size, x, y + size * 0.2);
   grad.addColorStop(0, '#ffffff');
   grad.addColorStop(0.55, '#ffe259');
   grad.addColorStop(1, grade.stops[1]);
   ctx.save();
-  ctx.textAlign = 'left';
+  ctx.textAlign = align;
   ctx.textBaseline = 'alphabetic';
   ctx.lineJoin = 'round';
   ctx.strokeStyle = '#1a0b2e';
@@ -210,16 +273,16 @@ function drawTitle(ctx, text, w, h, grade) {
   ctx.fillStyle = grad;
   ctx.fillText(clean, x, y);
   ctx.restore();
-  return size;
+  try { ctx.letterSpacing = '0px'; } catch { /* older canvas */ }
+  return { size, y };
 }
 
-function drawSubCaption(ctx, text, w, h, grade, titleSize) {
+function drawSubCaption(ctx, text, w, h, grade, titleSize, titleY, at = 'band', bandTop = h * 0.8) {
   const clean = (text || '').trim().toUpperCase();
   if (!clean) return;
-  const bandTop = h * 0.8;
   let size = h * 0.026;
   ctx.save();
-  ctx.textAlign = 'left';
+  ctx.textAlign = at === 'center' ? 'center' : 'left';
   ctx.textBaseline = 'alphabetic';
   const setFont = () => {
     ctx.font = `700 ${size}px system-ui, sans-serif`;
@@ -237,7 +300,11 @@ function drawSubCaption(ctx, text, w, h, grade, titleSize) {
   ctx.fillStyle = '#ffffff';
   ctx.shadowColor = grade.accent;
   ctx.shadowBlur = size * 0.6;
-  ctx.fillText(clean, w * 0.045, bandTop + h * 0.115 + titleSize * 0.62);
+  const x = at === 'center' ? w / 2 : w * 0.045;
+  const y = at === 'band'
+    ? bandTop + h * 0.115 + titleSize * 0.62
+    : titleY + titleSize * 0.62;
+  ctx.fillText(clean, x, y);
   ctx.restore();
 }
 
@@ -280,6 +347,8 @@ export function drawPoster(canvas, state) {
   const grade = GRADES[state.grade] || GRADES.sunset;
   const rects = panelRects(state.layout, w, h);
   const panels = state.panels || defaultPanels(state.layout);
+  const titlePos = TITLE_POSITIONS[state.titlePos] ? state.titlePos : 'band';
+  const spacing = Number(state.titleSpacing) || 0;
 
   // Base: dark plum so gutters read as poster borders.
   ctx.fillStyle = '#14061f';
@@ -335,9 +404,11 @@ export function drawPoster(canvas, state) {
   ctx.fillStyle = accent;
   ctx.fillRect(0, ph, w, Math.max(3, h * 0.004));
 
-  drawRetroSun(ctx, w * 0.93, ph + (h - ph) * 0.52, (h - ph) * 0.34, grade);
-  const titleSize = drawTitle(ctx, state.title, w, h, grade);
-  drawSubCaption(ctx, state.sub, w, h, grade, titleSize);
+  // Overlay title positions sit above the photo zone; the band title keeps
+  // the retro sun beside it, overlay titles leave the band to the sub-caption.
+  if (titlePos === 'band') drawRetroSun(ctx, w * 0.93, ph + (h - ph) * 0.52, (h - ph) * 0.34, grade);
+  const { size: titleSize, y: titleY } = drawTitle(ctx, state.title, w, h, grade, titlePos, spacing, ph);
+  drawSubCaption(ctx, state.sub, w, h, grade, titleSize, titleY, titlePos, ph);
   drawTag(ctx, w, h, grade);
 
   // Film grain over the whole poster, then a thin white frame.

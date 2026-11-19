@@ -1,7 +1,9 @@
 // A tiny static server for app/ (Node 22, standard library only), so an entry can be tried
-// locally without a build step: `node serve.ts` serves app/ on http://localhost:8080.
-// It sends the MIME types an offline web app needs, refuses any path outside app/, and otherwise
-// does nothing clever: this is a development convenience, not a web server for the internet.
+// locally without a build step: `node serve.ts` serves app/ on http://localhost:8080
+// (or `node serve.ts --port 8123` for another port). It sends the MIME types an
+// offline web app needs, refuses any path outside app/, answers HEAD with headers
+// only, and otherwise does nothing clever: this is a development convenience,
+// not a web server for the internet.
 import { createReadStream, statSync } from 'node:fs';
 import { createServer } from 'node:http';
 import { extname, join, normalize, resolve, sep } from 'node:path';
@@ -47,6 +49,10 @@ createServer((request, response) => {
     response.writeHead(400).end('bad request');
     return;
   }
+  if (request.method !== 'GET' && request.method !== 'HEAD') {
+    response.writeHead(405).end('method not allowed');
+    return;
+  }
   if (pathname.endsWith('/')) pathname += 'index.html';
   const file = resolve(join(root, normalize(pathname)));
   if (file !== root && !file.startsWith(root + sep)) {
@@ -67,6 +73,10 @@ createServer((request, response) => {
     'content-length': size,
     'cache-control': 'no-store',
   });
+  if (request.method === 'HEAD') {
+    response.end();
+    return;
+  }
   createReadStream(file).pipe(response);
 }).listen(port, '127.0.0.1', () => {
   console.log(`app/ is on http://localhost:${port}`);

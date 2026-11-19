@@ -12,18 +12,26 @@ multi-panel poster art — the Vice City sunset look, in your own original desig
 
 ## What it does
 
-- **Multi-panel posters** — 4 layouts: Hero Split (2 panels), Triptych (3 panels),
-  Four-Panel Grid, and Duo + Strip. One photo can spread across every panel,
-  or up to 3 different photos can fill the panels.
+- **Multi-panel posters** — 6 layouts: Hero Split (2 panels), Triptych
+  (3 panels), Four-Panel Grid, Duo + Strip, **Center Stage** (one full-bleed
+  hero photo) and **Magazine** (editorial cover spread: one tall cover star
+  beside two stacked panels). One photo can spread across every panel, or up
+  to 3 different photos can fill the panels.
 - **Your photos, your crop** — upload up to 3 photos from your machine, or try
-  the built-in sample scenes. Each panel gets its own photo, zoom slider, and
-  X/Y position sliders — or just drag the poster to pan the selected panel.
+  the built-in sample scenes (2 photos + 3 illustrated scenes). Each panel gets
+  its own photo, zoom slider, and X/Y position sliders — or just drag the
+  poster to pan the selected panel.
 - **Bold poster lettering** — title and sub-caption, edited live, set in Anton
   (SIL Open Font License, vendored under `app/fonts/`), with outline, sunset
   gradient fill and drop shadow, plus a retro striped sun and studio tag.
-- **4 colour grades** — Vice Sunset (teal → pink → orange), Neon Nights
-  (magenta/cyan), Palm Dusk (purple/gold), Hot Pink Drive (pink/red). Each grade
-  is a live canvas treatment: gradient wash, duotone tint, vignette and film grain.
+  **New in Round 2:** title position presets (in the caption band, over the
+  photo at the top, or centred over the photo on a soft scrim) and a
+  letter-spacing slider (0–12 px) for billboard-wide or masthead-tight type.
+- **6 colour grades** — Vice Sunset (teal → pink → orange), Neon Nights
+  (magenta/cyan), Palm Dusk (purple/gold), Hot Pink Drive (pink/red),
+  **Vice Teal** (aqua → deep blue → pink) and **Gold Rush** (gold → orange →
+  violet). Each grade is a live canvas treatment: gradient wash, duotone tint,
+  vignette and film grain.
 - **Real PNG export, one click per size** — 1080 × 1080, 1080 × 1350 and
   1920 × 1080, rendered at full size on canvas and downloaded with
   `canvas.toBlob`. The live preview shows exactly what the PNG will look like.
@@ -39,14 +47,18 @@ node serve.ts
 
 1. Pick photos (upload your own, or tap a sample scene).
 2. Choose a layout and a colour grade.
-3. Type your title and sub-caption, crop each panel.
+3. Type your title and sub-caption, place the title, set the tracking, crop each panel.
 4. Hit an Export button — your poster downloads as a PNG.
 
 ## Deterministic screenshots
 
 The app supports `?shot=cover|editor` with `photo`, `caption`, `sub`,
-`layout`, `grade` and `size` parameters to pin a fixed scene, e.g.
-`?shot=cover&photo=boulevard,pier,neon-street&caption=BOULEVARD%20QUEEN&layout=triptych&grade=sunset&size=wide`.
+`layout`, `grade`, `size`, `titlepos` and `spacing` parameters to pin a fixed
+scene, e.g.
+`?shot=cover&photo=boulevard,pier,neon-street&caption=BOULEVARD%20QUEEN&layout=triptych&grade=sunset&size=wide&titlepos=band&spacing=2`.
+The four screenshots show the new Round 2 work first: Center Stage in Gold
+Rush with a centred title, the Magazine layout in Vice Teal in the editor, a
+grid cover with the title on top in Neon Nights, and a square triptych.
 
 ## Files
 
@@ -54,13 +66,14 @@ The app supports `?shot=cover|editor` with `photo`, `caption`, `sub`,
 - `app/src/cover.js` — the poster renderer: layouts, grades, lettering, grain.
 - `app/src/main.js` — editor state, uploads, crop controls, PNG export.
 - `app/src/shots.js` — deterministic `?shot=` scenes.
-- `app/samples/` — two model-made photos from the kit (free to use) plus two
-  illustrated scenes drawn in-session (`neon-street.svg`, `palm-dusk.svg`).
+- `app/samples/` — two model-made photos from the kit (free to use) plus three
+  illustrated scenes drawn in-session (`neon-street.svg`, `palm-dusk.svg`,
+  `sunset-strip.svg`).
 - `app/fonts/Anton-Regular.ttf` — Anton, SIL Open Font License (`OFL.txt`).
 - `main.ts` — hands the entry in (copies `app/` + `screenshots/`, writes
   `dossier.json` with the vendored make.fun library).
-- `screenshots/` — 4 screenshots: exported covers in wide, portrait and square
-  sizes, plus the editor with a photo loaded.
+- `screenshots/` — 4 screenshots: the new Center Stage and Magazine layouts,
+  a portrait grid cover, and a square triptych.
 
 ## License
 
