@@ -1,45 +1,116 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="720" height="900" viewBox="0 0 720 900">
   <defs>
-    <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0" stop-color="#17c8c8"/>
-      <stop offset="0.45" stop-color="#ff5e8a"/>
-      <stop offset="0.8" stop-color="#ff9a3d"/>
-      <stop offset="1" stop-color="#ffb347"/>
+    <linearGradient id="dusk" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#0b3d4a"/>
+      <stop offset="0.38" stop-color="#2a6f7e"/>
+      <stop offset="0.62" stop-color="#e56b8c"/>
+      <stop offset="0.82" stop-color="#ff9e5e"/>
+      <stop offset="1" stop-color="#ffc46b"/>
     </linearGradient>
     <linearGradient id="sea" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0" stop-color="#ff7a5c"/>
-      <stop offset="1" stop-color="#2b1050"/>
+      <stop offset="0" stop-color="#ff8f6b"/>
+      <stop offset="0.25" stop-color="#b3507a"/>
+      <stop offset="0.6" stop-color="#274b63"/>
+      <stop offset="1" stop-color="#0a2233"/>
     </linearGradient>
+    <radialGradient id="sunset" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0" stop-color="#fff3b0"/>
+      <stop offset="0.55" stop-color="#ffb347"/>
+      <stop offset="1" stop-color="#ff5e62" stop-opacity="0.9"/>
+    </radialGradient>
+    <filter id="haze" x="-40%" y="-40%" width="180%" height="180%">
+      <feGaussianBlur stdDeviation="18"/>
+    </filter>
+    <filter id="soft2" x="-40%" y="-40%" width="180%" height="180%">
+      <feGaussianBlur stdDeviation="8"/>
+    </filter>
   </defs>
-  <rect width="720" height="900" fill="url(#sky)"/>
-  <g fill="#ffffff" opacity="0.7">
-    <circle cx="100" cy="140" r="3"/><circle cx="220" cy="90" r="2"/><circle cx="560" cy="110" r="3"/>
-    <circle cx="640" cy="180" r="2"/><circle cx="420" cy="70" r="2"/>
+
+  <!-- sky -->
+  <rect width="720" height="560" fill="url(#dusk)"/>
+
+  <!-- high clouds -->
+  <g fill="#ffffff" opacity="0.28">
+    <ellipse cx="160" cy="120" rx="120" ry="16"/>
+    <ellipse cx="230" cy="140" rx="90" ry="12"/>
+    <ellipse cx="520" cy="90" rx="130" ry="14"/>
+    <ellipse cx="600" cy="180" rx="100" ry="12"/>
+    <ellipse cx="90" cy="220" rx="80" ry="10"/>
   </g>
-  <g stroke="#1c0b33" stroke-width="5" stroke-linecap="round" fill="none">
-    <path d="M180 180 q14 -14 28 0 q14 -14 28 0"/>
-    <path d="M480 140 q14 -14 28 0 q14 -14 28 0"/>
+  <!-- pink dusk clouds -->
+  <g fill="#ff7fa5" opacity="0.45">
+    <ellipse cx="360" cy="300" rx="200" ry="18"/>
+    <ellipse cx="180" cy="340" rx="120" ry="12"/>
+    <ellipse cx="560" cy="330" rx="130" ry="12"/>
   </g>
-  <circle cx="360" cy="480" r="170" fill="#ffe259"/>
-  <rect x="170" y="480" width="380" height="16" fill="#ff5e8a"/>
-  <rect x="170" y="520" width="380" height="20" fill="#ff9a3d"/>
-  <rect x="170" y="566" width="380" height="26" fill="#ffb347"/>
-  <rect x="0" y="620" width="720" height="280" fill="url(#sea)"/>
-  <g stroke="#ffffff" stroke-width="5" opacity="0.55" stroke-linecap="round">
-    <line x1="120" y1="680" x2="600" y2="680"/>
-    <line x1="200" y1="740" x2="520" y2="740"/>
-    <line x1="280" y1="810" x2="440" y2="810"/>
+
+  <!-- low sun on the horizon -->
+  <circle cx="360" cy="520" r="86" fill="url(#sunset)"/>
+  <circle cx="360" cy="520" r="118" fill="#ff9e5e" opacity="0.3" filter="url(#haze)"/>
+
+  <!-- birds -->
+  <g stroke="#1c2b33" stroke-width="4" fill="none" stroke-linecap="round">
+    <path d="M150 180 q 14 -14 28 0 q 14 -14 28 0"/>
+    <path d="M240 230 q 11 -11 22 0 q 11 -11 22 0"/>
+    <path d="M500 160 q 14 -14 28 0 q 14 -14 28 0"/>
+    <path d="M560 250 q 10 -10 20 0 q 10 -10 20 0"/>
+    <path d="M90 300 q 9 -9 18 0 q 9 -9 18 0"/>
   </g>
-  <g stroke="#ffe259" stroke-width="4" opacity="0.7" stroke-linecap="round">
-    <line x1="330" y1="660" x2="390" y2="660"/>
-    <line x1="300" y1="700" x2="420" y2="700"/>
+
+  <!-- sea -->
+  <rect x="0" y="560" width="720" height="340" fill="url(#sea)"/>
+
+  <!-- sun path on the water -->
+  <g fill="#ffd166" opacity="0.75">
+    <rect x="300" y="580" width="120" height="7" rx="3.5"/>
+    <rect x="280" y="612" width="160" height="7" rx="3.5" opacity="0.8"/>
+    <rect x="250" y="648" width="220" height="7" rx="3.5" opacity="0.6"/>
+    <rect x="220" y="688" width="280" height="7" rx="3.5" opacity="0.45"/>
+    <rect x="190" y="732" width="340" height="7" rx="3.5" opacity="0.3"/>
+    <rect x="160" y="780" width="400" height="7" rx="3.5" opacity="0.2"/>
   </g>
-  <g fill="#1c0b33">
-    <path d="M80 640 Q50 480 10 400 Q60 440 70 380 Q80 470 110 520 Q140 460 170 430 Q140 520 130 640 Z"/>
-    <path d="M640 640 Q610 470 570 390 Q620 430 630 370 Q640 460 670 520 Q700 460 720 440 Q700 530 690 640 Z"/>
-    <rect x="0" y="620" width="720" height="26"/>
+  <!-- wave lines -->
+  <g stroke="#ffffff" stroke-width="2.5" opacity="0.22" fill="none" stroke-linecap="round">
+    <path d="M40 640 q 30 -10 60 0 t 60 0 t 60 0"/>
+    <path d="M480 660 q 30 -10 60 0 t 60 0 t 60 0"/>
+    <path d="M80 720 q 30 -10 60 0 t 60 0 t 60 0"/>
+    <path d="M420 760 q 30 -10 60 0 t 60 0 t 60 0"/>
+    <path d="M20 820 q 30 -10 60 0 t 60 0 t 60 0"/>
+    <path d="M480 840 q 30 -10 60 0 t 60 0 t 60 0"/>
   </g>
-  <g fill="#1c0b33">
-    <circle cx="120" cy="300" r="10"/><circle cx="600" cy="240" r="8"/><circle cx="520" cy="330" r="6"/>
+
+  <!-- distant headland -->
+  <path d="M0 560 L120 520 L260 560 Z" fill="#12303e"/>
+  <path d="M720 560 L620 528 L500 560 Z" fill="#12303e"/>
+
+  <!-- left foreground palm -->
+  <g fill="#06121a">
+    <path d="M120 900 C 132 760 128 660 100 570 C 96 554 110 548 116 562 C 138 640 142 760 134 900 Z"/>
+    <path d="M100 574 C 52 540 22 544 4 576 C 38 566 68 580 92 600 Z"/>
+    <path d="M102 570 C 88 512 110 478 146 468 C 126 498 116 534 114 566 Z"/>
+    <path d="M104 570 C 134 514 180 498 214 512 C 178 528 146 550 120 584 Z"/>
+    <path d="M106 572 C 144 542 190 548 214 576 C 178 578 140 586 118 600 Z"/>
+    <path d="M98 576 C 66 554 32 564 12 588 C 44 582 72 590 94 602 Z"/>
+    <path d="M110 566 C 100 530 84 508 58 500 C 76 522 88 546 96 570 Z"/>
   </g>
+  <!-- right foreground palm, leaning in -->
+  <g fill="#06121a">
+    <path d="M620 900 C 606 780 610 700 640 620 C 644 606 630 600 624 612 C 602 690 598 790 606 900 Z"/>
+    <path d="M640 624 C 676 592 700 596 716 622 C 688 614 664 626 646 644 Z"/>
+    <path d="M638 620 C 650 566 632 536 600 528 C 616 554 626 588 628 616 Z"/>
+    <path d="M636 620 C 610 570 570 556 540 570 C 572 584 600 604 622 632 Z"/>
+    <path d="M634 622 C 600 594 558 600 536 624 C 568 626 602 634 624 646 Z"/>
+    <path d="M644 620 C 664 590 694 584 712 600 C 690 602 668 610 652 624 Z"/>
+  </g>
+  <!-- small palm sapling centre-left on the shore -->
+  <g fill="#06121a">
+    <path d="M300 900 C 304 830 302 790 292 750 C 290 742 298 739 301 747 C 310 786 311 830 309 900 Z"/>
+    <path d="M292 752 C 272 736 258 738 250 752 C 266 748 280 754 290 764 Z"/>
+    <path d="M292 750 C 288 724 300 708 318 704 C 308 720 300 736 299 750 Z"/>
+    <path d="M293 751 C 308 728 330 722 344 730 C 328 738 312 748 301 762 Z"/>
+  </g>
+
+  <!-- shore sand strip -->
+  <path d="M0 900 L0 862 Q 180 838 360 856 T 720 848 L720 900 Z" fill="#1a2f3d"/>
+  <path d="M0 872 Q 180 850 360 866 T 720 858" stroke="#ffc46b" stroke-width="3" fill="none" opacity="0.5"/>
 </svg>

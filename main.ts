@@ -45,13 +45,14 @@ function handIn(): void {
   stage(join(repoRoot, 'app'), join(outputDir, 'app'));
 
   // The screenshots: up to four PNG/JPEG renders, the first by name the
-  // cover. The folder is always present in the output even if empty, so
-  // the dossier writer sees the same shape either way.
+  // cover. Round 5: reuse the stage() helper when the folder exists, so
+  // the output still always has the screenshots dir either way.
   const shotsOut = join(outputDir, 'screenshots');
-  mkdirSync(shotsOut, { recursive: true });
   const shotsIn = join(repoRoot, 'screenshots');
   if (existsSync(shotsIn)) {
-    cpSync(shotsIn, shotsOut, { recursive: true });
+    stage(shotsIn, shotsOut);
+  } else {
+    mkdirSync(shotsOut, { recursive: true });
   }
 
   const dossier = buildDossier(outputDir, SCORER_CAPS);
