@@ -1,83 +1,128 @@
-// A tiny static server for app/ (Node 22, standard library only), so an entry can be tried
-// locally without a build step: `node serve.ts` serves app/ on http://localhost:8080
-// (or `node serve.ts --port 8123` for another port). It sends the MIME types an
-// offline web app needs, refuses any path outside app/, answers HEAD with headers
-// only, and otherwise does nothing clever: this is a development convenience,
-// not a web server for the internet.
-import { createReadStream, statSync } from 'node:fs';
-import { createServer } from 'node:http';
-import { extname, join, normalize, resolve, sep } from 'node:path';
-import { fileURLToPath } from 'node:url';
+// Dev-only static file server for the app/ folder.
+//
+// Run it with `node serve.ts` (defaults to port 8080) or pass
+// `--port <number>` to pick another one. It only ever serves files
+// that live under app/, only answers GET and HEAD, and only binds
+// the loopback interface, so it is handy while iterating locally
+// and useless as a public server. Node 22 standard library only.
+import { createReadStream, statSync } from "node:fs";
+import { createServer } from "node:http";
+import type { IncomingMessage, ServerResponse } from "node:http";
+import { extname, relative, resolve } from "node:path";
+import { fileURLToPath } from "node:url";
 
-const root = resolve(fileURLToPath(new URL('./app', import.meta.url)));
-const args = process.argv.slice(2);
-const portIndex = args.indexOf('--port');
-const requested = portIndex === -1 ? 8080 : Number(args[portIndex + 1]);
-const port = Number.isInteger(requested) && requested > 0 && requested < 65536 ? requested : 8080;
+const APP_ROOT = resolve(fileURLToPath(new URL("./app", import.meta.url)));
+const DEFAULT_PORT = 8080;
+const FALLBACK_TYPE = "application/octet-stream";
 
-const MIME: Record<string, string> = {
-  '.html': 'text/html; charset=utf-8',
-  '.js': 'text/javascript; charset=utf-8',
-  '.mjs': 'text/javascript; charset=utf-8',
-  '.css': 'text/css; charset=utf-8',
-  '.json': 'application/json; charset=utf-8',
-  '.png': 'image/png',
-  '.jpg': 'image/jpeg',
-  '.jpeg': 'image/jpeg',
-  '.gif': 'image/gif',
-  '.webp': 'image/webp',
-  '.svg': 'image/svg+xml',
-  '.ico': 'image/x-icon',
-  '.woff2': 'font/woff2',
-  '.woff': 'font/woff',
-  '.ttf': 'font/ttf',
-  '.otf': 'font/otf',
-  '.bin': 'application/octet-stream',
-  '.wasm': 'application/wasm',
-  '.wav': 'audio/wav',
-  '.mp3': 'audio/mpeg',
-  '.ogg': 'audio/ogg',
-  '.txt': 'text/plain; charset=utf-8',
-};
+// Extension (lowercase, with the leading dot) -> Content-Type.
+const TYPES = new Map<string, string>([
+  [".html", "text/html; charset=utf-8"],
+  [".js", "text/javascript; charset=utf-8"],
+  [".mjs", "text/javascript; charset=utf-8"],
+  [".css", "text/css; charset=utf-8"],
+  [".json", "application/json; charset=utf-8"],
+  [".png", "image/png"],
+  [".jpg", "image/jpeg"],
+  [".jpeg", "image/jpeg"],
+  [".gif", "image/gif"],
+  [".webp", "image/webp"],
+  [".svg", "image/svg+xml"],
+  [".ico", "image/x-icon"],
+  [".woff2", "font/woff2"],
+  [".woff", "font/woff"],
+  [".ttf", "font/ttf"],
+  [".otf", "font/otf"],
+  [".bin", FALLBACK_TYPE],
+  [".wasm", "application/wasm"],
+  [".wav", "audio/wav"],
+  [".mp3", "audio/mpeg"],
+  [".ogg", "audio/ogg"],
+  [".txt", "text/plain; charset=utf-8"],
+]);
 
-createServer((request, response) => {
-  const url = new URL(request.url ?? '/', 'http://localhost');
-  let pathname: string;
+function typeFor(filePath: string): string {
+  return TYPES.get(extname(filePath).toLowerCase()) ?? FALLBACK_TYPE;
+}
+
+// Reads `--port <n>` out of argv; anything missing, non-numeric or
+// out of range falls back to the default port.
+function pickPort(argv: string[]): number {
+  const flagAt = argv.indexOf("--port");
+  if (flagAt === -1) return DEFAULT_PORT;
+  const wanted = Number(argv[flagAt + 1]);
+  const usable =
+    Number.isInteger(wanted) && wanted > 0 && wanted < 65536;
+  return usable ? wanted : DEFAULT_PORT;
+}
+
+function replyText(
+  res: ServerResponse,
+  status: number,
+  body: string,
+): void {
+  res.writeHead(status, { "content-type": "text/plain; charset=utf-8" });
+  res.end(body);
+}
+
+// True when `candidate` is APP_ROOT itself or lives underneath it.
+// Any path that climbs out (a ".." that escapes the root) fails here.
+function staysInside(candidate: string): boolean {
+  const rel = relative(APP_ROOT, candidate);
+  return rel === "" || (rel !== ".." && !rel.startsWith(`..${"/"}`));
+}
+
+function handle(req: IncomingMessage, res: ServerResponse): void {
+  const method = req.method ?? "";
+  if (method !== "GET" && method !== "HEAD") {
+    replyText(res, 405, "method not allowed");
+    return;
+  }
+
+  const rawPath = new URL(req.url ?? "/", "http://127.0.0.1").pathname;
+  let decoded: string;
   try {
-    pathname = decodeURIComponent(url.pathname);
+    decoded = decodeURIComponent(rawPath);
   } catch {
-    response.writeHead(400).end('bad request');
+    replyText(res, 400, "bad request");
     return;
   }
-  if (request.method !== 'GET' && request.method !== 'HEAD') {
-    response.writeHead(405).end('method not allowed');
+  if (decoded.endsWith("/")) decoded += "index.html";
+
+  // Resolve against the root without collapsing ".." away first, so
+  // a traversal that climbs out of app/ is caught by staysInside
+  // instead of silently landing back inside it.
+  const target = resolve(APP_ROOT, `.${decoded}`);
+  if (!staysInside(target)) {
+    replyText(res, 403, "forbidden");
     return;
   }
-  if (pathname.endsWith('/')) pathname += 'index.html';
-  const file = resolve(join(root, normalize(pathname)));
-  if (file !== root && !file.startsWith(root + sep)) {
-    response.writeHead(403).end('forbidden');
-    return;
-  }
-  let size: number;
+
+  let bytes: number;
   try {
-    const stats = statSync(file);
-    if (!stats.isFile()) throw new Error('not a file');
-    size = stats.size;
+    const info = statSync(target);
+    if (!info.isFile()) throw new Error("not a regular file");
+    bytes = info.size;
   } catch {
-    response.writeHead(404).end('not found');
+    replyText(res, 404, "not found");
     return;
   }
-  response.writeHead(200, {
-    'content-type': MIME[extname(file).toLowerCase()] ?? 'application/octet-stream',
-    'content-length': size,
-    'cache-control': 'no-store',
+
+  res.writeHead(200, {
+    "content-type": typeFor(target),
+    "content-length": bytes,
+    "cache-control": "no-store",
   });
-  if (request.method === 'HEAD') {
-    response.end();
+  if (method === "HEAD") {
+    res.end();
     return;
   }
-  createReadStream(file).pipe(response);
-}).listen(port, '127.0.0.1', () => {
-  console.log(`app/ is on http://localhost:${port}`);
+  const stream = createReadStream(target);
+  stream.on("error", () => res.destroy());
+  stream.pipe(res);
+}
+
+const port = pickPort(process.argv.slice(2));
+createServer(handle).listen(port, "127.0.0.1", () => {
+  console.log(`Serving app/ at http://localhost:${port}/`);
 });
