@@ -1,55 +1,61 @@
-// Neon Palms Cover Studio — gta6-cover-art-01 entry program (Node 22, stdlib only).
-// Round 2 rebuild: 6 layouts, 6 colour grades, title position presets and
-// letter-spacing, plus a third illustrated sample scene (Sunset Strip).
-// The app is plain static files under app/ (index.html, ES modules, CSS, a vendored
-// OFL font and sample images) that run offline in desktop Chrome with no network
-// request. This program hands the entry in: it copies app/ and screenshots/ from
-// beside this file into the output directory and writes output/dossier.json with
-// the vendored make.fun library, so the judge can read the app and its screenshots.
+// Neon Palms Cover Studio — submission entrypoint.
 //
-// Try it locally with `node serve.ts`, then open http://localhost:8080.
-// Outside the grader, MAKEFUN_OUTPUT_DIR stands in for /output:
-//   mkdir -p out && MAKEFUN_OUTPUT_DIR=out node main.ts
+// The app itself lives in app/ next to this file: plain static files a
+// desktop browser loads offline (index.html plus its ES modules, no library
+// and no network request). All this file does is hand that app in: it stages
+// a copy of app/ and screenshots/ under the output directory and writes the
+// dossier.json summary the judge reads, using the vendored make.fun library.
+//
+// Run it with `node main.ts`. Outside the grader's container the output
+// directory comes from MAKEFUN_OUTPUT_DIR (it stands in for /output):
+//   MAKEFUN_OUTPUT_DIR=out node main.ts
+//
+// Serve the app locally with `node serve.ts`, then open http://localhost:8080.
 
-import { cpSync, existsSync, mkdirSync, readdirSync, statSync, writeFileSync } from 'node:fs';
+import { cpSync, existsSync, mkdirSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { buildDossier } from './vendor/makefun-app.ts';
 
-const here = fileURLToPath(new URL('.', import.meta.url));
-const out = process.env.MAKEFUN_OUTPUT_DIR ?? '/output';
+// The scorer's caps for this bounty (from the kit's gate): the text cap is
+// the only one that shapes the dossier bytes. The rest make this program
+// refuse exactly where the scorer would — too many screenshots, one too
+// large, too many app entries or bytes, or an app path too long — so a
+// dossier written here is one the scorer accepts.
+const SCORER_CAPS = {
+  text_max_bytes: 163840,
+  screenshots: { max: 4, max_bytes: 262144 },
+  app_max_files: 993,
+  app_max_bytes: 50331648,
+  app_path_max_bytes: 1000,
+} as const;
 
-mkdirSync(out, { recursive: true });
-cpSync(join(here, 'app'), join(out, 'app'), { recursive: true });
-mkdirSync(join(out, 'screenshots'), { recursive: true });
-if (existsSync(join(here, 'screenshots'))) cpSync(join(here, 'screenshots'), join(out, 'screenshots'), { recursive: true });
-
-// Count what was handed in, so a silent partial copy is obvious in the log.
-function countFiles(dir) {
-  let n = 0;
-  for (const entry of readdirSync(dir, { withFileTypes: true })) {
-    n += entry.isDirectory() ? countFiles(join(dir, entry.name)) : 1;
-  }
-  return n;
+function stage(sourceDir: string, targetDir: string): void {
+  mkdirSync(targetDir, { recursive: true });
+  cpSync(sourceDir, targetDir, { recursive: true });
 }
 
-// The scorer's caps: text_max_bytes shapes the dossier text; the other limits
-// refuse an entry the scorer would refuse (more than 4 screenshots, one over
-// 256 KiB; more than 993 files in app/ or 48 MiB of app files in all, or an app/
-// path over 1000 bytes, beside /output's own 1000-entry cap).
-const dossierPath = join(out, 'dossier.json');
-writeFileSync(
-  dossierPath,
-  buildDossier(out, {
-    text_max_bytes: 163840,
-    screenshots: { max: 4, max_bytes: 262144 },
-    app_max_files: 993,
-    app_max_bytes: 50331648,
-    app_path_max_bytes: 1000,
-  }),
-);
+function handIn(): void {
+  const repoRoot = fileURLToPath(new URL('.', import.meta.url));
+  const outputDir = process.env.MAKEFUN_OUTPUT_DIR ?? '/output';
 
-console.log(
-  `Neon Palms Cover Studio handed in: ${out} (dossier.json ${statSync(dossierPath).size} bytes, ` +
-  `${countFiles(join(out, 'app'))} app files, ${readdirSync(join(out, 'screenshots')).length} screenshots)`,
-);
+  mkdirSync(outputDir, { recursive: true });
+
+  // The app: every static file, copied whole.
+  stage(join(repoRoot, 'app'), join(outputDir, 'app'));
+
+  // The screenshots: up to four PNG/JPEG renders, the first by name the
+  // cover. The folder is always present in the output even if empty, so
+  // the dossier writer sees the same shape either way.
+  const shotsOut = join(outputDir, 'screenshots');
+  mkdirSync(shotsOut, { recursive: true });
+  const shotsIn = join(repoRoot, 'screenshots');
+  if (existsSync(shotsIn)) {
+    cpSync(shotsIn, shotsOut, { recursive: true });
+  }
+
+  const dossier = buildDossier(outputDir, SCORER_CAPS);
+  writeFileSync(join(outputDir, 'dossier.json'), dossier);
+}
+
+handIn();
