@@ -1,55 +1,230 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="720" height="900" viewBox="0 0 720 900">
   <defs>
-    <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0" stop-color="#2b1050"/>
-      <stop offset="0.5" stop-color="#b537f2"/>
-      <stop offset="0.8" stop-color="#ff5e8a"/>
-      <stop offset="1" stop-color="#ff9a3d"/>
+    <linearGradient id="strip-sky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#160b2e"/>
+      <stop offset="0.34" stop-color="#4a1660"/>
+      <stop offset="0.58" stop-color="#b3276b"/>
+      <stop offset="0.78" stop-color="#ff6a3d"/>
+      <stop offset="1" stop-color="#ffc46b"/>
     </linearGradient>
-    <linearGradient id="asphalt" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0" stop-color="#3a1040"/>
-      <stop offset="1" stop-color="#0a0318"/>
+    <radialGradient id="strip-sun" cx="0.5" cy="0.42" r="0.55">
+      <stop offset="0" stop-color="#fff8c9"/>
+      <stop offset="0.5" stop-color="#ffd23e"/>
+      <stop offset="0.85" stop-color="#ff7a2f"/>
+      <stop offset="1" stop-color="#ff3d68"/>
+    </radialGradient>
+    <linearGradient id="strip-road" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#3a1b52"/>
+      <stop offset="0.45" stop-color="#241031"/>
+      <stop offset="1" stop-color="#0e0518"/>
     </linearGradient>
+    <linearGradient id="strip-walk" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#7a3d63"/>
+      <stop offset="1" stop-color="#2c1030"/>
+    </linearGradient>
+    <linearGradient id="strip-gleam" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#ffcf5e" stop-opacity="0.85"/>
+      <stop offset="1" stop-color="#ff2e88" stop-opacity="0.05"/>
+    </linearGradient>
+    <filter id="strip-glow" x="-60%" y="-60%" width="220%" height="220%">
+      <feGaussianBlur stdDeviation="5" result="b"/>
+      <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <filter id="strip-soft" x="-40%" y="-40%" width="180%" height="180%">
+      <feGaussianBlur stdDeviation="12"/>
+    </filter>
+    <mask id="strip-slats">
+      <rect x="180" y="240" width="360" height="360" fill="#ffffff"/>
+      <g fill="#000000">
+        <rect x="180" y="470" width="360" height="7"/>
+        <rect x="180" y="492" width="360" height="9"/>
+        <rect x="180" y="518" width="360" height="12"/>
+        <rect x="180" y="548" width="360" height="15"/>
+      </g>
+    </mask>
   </defs>
-  <rect width="720" height="900" fill="url(#sky)"/>
-  <g fill="#ffffff" opacity="0.8">
-    <circle cx="80" cy="80" r="3"/><circle cx="200" cy="130" r="2"/><circle cx="520" cy="70" r="3"/>
-    <circle cx="640" cy="140" r="2"/><circle cx="380" cy="110" r="2"/>
+
+  <!-- sky -->
+  <rect width="720" height="900" fill="url(#strip-sky)"/>
+
+  <!-- early stars -->
+  <g fill="#ffffff" opacity="0.85">
+    <circle cx="52" cy="56" r="2"/><circle cx="138" cy="34" r="1.4"/>
+    <circle cx="236" cy="78" r="1.8"/><circle cx="492" cy="42" r="1.6"/>
+    <circle cx="586" cy="88" r="2"/><circle cx="664" cy="48" r="1.4"/>
+    <circle cx="330" cy="30" r="1.3"/><circle cx="618" cy="150" r="1.5"/>
   </g>
-  <circle cx="360" cy="380" r="140" fill="#ffe259"/>
-  <rect x="200" y="380" width="320" height="13" fill="#b537f2"/>
-  <rect x="200" y="414" width="320" height="17" fill="#ff5e8a"/>
-  <rect x="200" y="452" width="320" height="22" fill="#ff9a3d"/>
-  <g fill="#150634">
-    <rect x="0" y="420" width="90" height="480"/>
-    <rect x="630" y="380" width="90" height="520"/>
+
+  <!-- retro sun, low and centred over the strip -->
+  <circle cx="360" cy="420" r="150" fill="url(#strip-sun)" mask="url(#strip-slats)"/>
+  <circle cx="360" cy="420" r="150" fill="none" stroke="#ffd23e" stroke-opacity="0.35" stroke-width="3"/>
+
+  <!-- thin sunset cloud streaks -->
+  <g fill="#ff9e7a" opacity="0.55">
+    <ellipse cx="120" cy="180" rx="110" ry="9"/>
+    <ellipse cx="180" cy="205" rx="80" ry="7"/>
+    <ellipse cx="600" cy="165" rx="120" ry="9"/>
+    <ellipse cx="560" cy="240" rx="85" ry="7"/>
   </g>
-  <g fill="#00e5ff">
-    <rect x="18" y="440" width="54" height="22"/><rect x="18" y="480" width="54" height="22"/>
-    <rect x="648" y="410" width="54" height="22"/><rect x="648" y="452" width="54" height="22"/>
+  <g fill="#ffb46b" opacity="0.4">
+    <ellipse cx="90" cy="300" rx="70" ry="6"/>
+    <ellipse cx="640" cy="310" rx="75" ry="6"/>
   </g>
-  <g fill="#ff2fb3">
-    <rect x="18" y="530" width="54" height="22"/><rect x="648" y="500" width="54" height="22"/>
+
+  <!-- distant skyline silhouettes -->
+  <g fill="#3d1650">
+    <rect x="0" y="430" width="70" height="140"/>
+    <rect x="70" y="400" width="55" height="170"/>
+    <rect x="125" y="450" width="45" height="120"/>
+    <rect x="550" y="440" width="50" height="130"/>
+    <rect x="600" y="405" width="55" height="165"/>
+    <rect x="655" y="445" width="65" height="125"/>
   </g>
-  <rect x="0" y="640" width="720" height="260" fill="url(#asphalt)"/>
-  <g stroke="#ffe259" stroke-width="6" stroke-linecap="round">
-    <line x1="360" y1="660" x2="360" y2="720"/>
-    <line x1="360" y1="750" x2="360" y2="830"/>
-    <line x1="360" y1="860" x2="360" y2="900"/>
+
+  <!-- left art-deco tower -->
+  <g fill="#1d0a33">
+    <rect x="18" y="300" width="128" height="280"/>
+    <rect x="34" y="268" width="96" height="34"/>
+    <rect x="52" y="240" width="60" height="30"/>
+    <rect x="70" y="216" width="24" height="26"/>
   </g>
+  <!-- right art-deco tower -->
+  <g fill="#1d0a33">
+    <rect x="576" y="312" width="126" height="268"/>
+    <rect x="592" y="280" width="94" height="34"/>
+    <rect x="610" y="252" width="58" height="30"/>
+    <rect x="628" y="228" width="22" height="26"/>
+  </g>
+  <!-- tower beacons -->
+  <g filter="url(#strip-glow)">
+    <circle cx="82" cy="210" r="5" fill="#ff4d6d"/>
+    <circle cx="639" cy="222" r="5" fill="#ff4d6d"/>
+  </g>
+
+  <!-- lit windows, left tower -->
+  <g fill="#ffd23e" opacity="0.9">
+    <rect x="36" y="320" width="12" height="16"/><rect x="60" y="320" width="12" height="16"/>
+    <rect x="84" y="320" width="12" height="16"/><rect x="108" y="320" width="12" height="16"/>
+    <rect x="36" y="356" width="12" height="16"/><rect x="84" y="356" width="12" height="16"/>
+    <rect x="108" y="356" width="12" height="16"/><rect x="60" y="392" width="12" height="16"/>
+    <rect x="108" y="392" width="12" height="16"/><rect x="36" y="428" width="12" height="16"/>
+    <rect x="84" y="428" width="12" height="16"/><rect x="60" y="464" width="12" height="16"/>
+    <rect x="108" y="464" width="12" height="16"/>
+  </g>
+  <!-- lit windows, right tower -->
+  <g fill="#ff9e5e" opacity="0.9">
+    <rect x="594" y="332" width="12" height="16"/><rect x="618" y="332" width="12" height="16"/>
+    <rect x="642" y="332" width="12" height="16"/><rect x="666" y="332" width="12" height="16"/>
+    <rect x="594" y="368" width="12" height="16"/><rect x="642" y="368" width="12" height="16"/>
+    <rect x="618" y="404" width="12" height="16"/><rect x="666" y="404" width="12" height="16"/>
+    <rect x="594" y="440" width="12" height="16"/><rect x="642" y="440" width="12" height="16"/>
+    <rect x="666" y="476" width="12" height="16"/><rect x="618" y="476" width="12" height="16"/>
+  </g>
+
+  <!-- birds crossing the sunset -->
+  <g stroke="#1d0a33" stroke-width="3" stroke-linecap="round" fill="none" opacity="0.9">
+    <path d="M248 150 Q258 140 268 150 Q278 140 288 150"/>
+    <path d="M300 128 Q308 120 316 128 Q324 120 332 128"/>
+    <path d="M462 112 Q470 104 478 112 Q486 104 494 112"/>
+    <path d="M520 168 Q528 160 536 168 Q544 160 552 168"/>
+    <path d="M180 110 Q187 103 194 110 Q201 103 208 110"/>
+  </g>
+
+  <!-- ground: sidewalks + perspective street -->
+  <polygon points="0,580 720,580 720,900 0,900" fill="url(#strip-walk)"/>
+  <polygon points="212,580 508,580 640,900 80,900" fill="url(#strip-road)"/>
+  <!-- sun gleam down the road -->
+  <polygon points="330,580 390,580 470,900 250,900" fill="url(#strip-gleam)" opacity="0.5"/>
+
+  <!-- centre dashes, growing toward the viewer -->
+  <g fill="#ffd23e">
+    <rect x="356" y="600" width="8" height="18"/>
+    <rect x="354" y="640" width="12" height="26"/>
+    <rect x="352" y="696" width="16" height="38"/>
+    <rect x="350" y="762" width="20" height="52"/>
+    <rect x="346" y="840" width="28" height="60"/>
+  </g>
+
+  <!-- crosswalk near the bottom -->
+  <g fill="#ffffff" opacity="0.85">
+    <polygon points="120,828 168,828 158,876 108,876"/>
+    <polygon points="196,828 244,828 238,876 188,876"/>
+    <polygon points="272,828 320,828 318,876 268,876"/>
+    <polygon points="348,828 396,828 398,876 348,876"/>
+    <polygon points="424,828 472,828 478,876 428,876"/>
+    <polygon points="500,828 548,828 558,876 508,876"/>
+    <polygon points="576,828 624,828 638,876 588,876"/>
+  </g>
+
+  <!-- neon signs -->
+  <g font-family="Arial, Helvetica, sans-serif" font-weight="900" text-anchor="middle">
+    <g filter="url(#strip-glow)">
+      <text x="82" y="300" font-size="34" letter-spacing="2" fill="#00e5ff" transform="rotate(-90 82 300)">HOTEL</text>
+    </g>
+    <g filter="url(#strip-glow)">
+      <text x="640" y="470" font-size="30" letter-spacing="3" fill="#ff2e88">PALMS</text>
+      <text x="640" y="500" font-size="16" letter-spacing="6" fill="#ffd23e">MOTEL</text>
+    </g>
+  </g>
+
+  <!-- foreground palms framing the strip -->
+  <g stroke="#160a26" stroke-width="14" stroke-linecap="round" fill="none">
+    <path d="M28 900 Q40 760 78 648"/>
+    <path d="M692 900 Q680 760 642 648"/>
+  </g>
+  <g fill="#160a26">
+    <path d="M78 648 Q30 600 4 596 Q44 622 78 648 Z"/>
+    <path d="M78 648 Q40 640 8 668 Q48 664 78 648 Z"/>
+    <path d="M78 648 Q100 590 150 578 Q112 612 78 648 Z"/>
+    <path d="M78 648 Q130 620 168 632 Q120 640 78 648 Z"/>
+    <path d="M78 648 Q60 590 60 560 Q76 600 78 648 Z"/>
+    <path d="M78 648 Q110 600 118 566 Q104 606 78 648 Z"/>
+    <path d="M642 648 Q690 600 716 596 Q676 622 642 648 Z"/>
+    <path d="M642 648 Q680 640 712 668 Q672 664 642 648 Z"/>
+    <path d="M642 648 Q620 590 570 578 Q608 612 642 648 Z"/>
+    <path d="M642 648 Q590 620 552 632 Q600 640 642 648 Z"/>
+    <path d="M642 648 Q660 590 660 560 Q644 600 642 648 Z"/>
+    <path d="M642 648 Q610 600 602 566 Q616 606 642 648 Z"/>
+  </g>
+  <g fill="#2c1445">
+    <circle cx="70" cy="652" r="7"/><circle cx="86" cy="656" r="6"/>
+    <circle cx="634" cy="656" r="6"/><circle cx="650" cy="652" r="7"/>
+  </g>
+
+  <!-- street lamps -->
+  <g stroke="#160a26" stroke-width="6" stroke-linecap="round" fill="none">
+    <path d="M208 800 L208 688 Q208 680 218 680"/>
+    <path d="M512 800 L512 688 Q512 680 502 680"/>
+  </g>
+  <g filter="url(#strip-glow)">
+    <circle cx="222" cy="682" r="7" fill="#fff3b0"/>
+    <circle cx="498" cy="682" r="7" fill="#fff3b0"/>
+  </g>
+
+  <!-- marquee + drive-in signs on the towers -->
+  <g font-family="Arial, Helvetica, sans-serif" font-weight="900" text-anchor="middle">
+    <rect x="24" y="516" width="116" height="42" rx="6" fill="#12041f" stroke="#00e5ff" stroke-width="2"/>
+    <text x="82" y="546" font-size="26" letter-spacing="4" fill="#00e5ff" filter="url(#strip-glow)">VICE</text>
+    <rect x="588" y="516" width="102" height="42" rx="6" fill="#12041f" stroke="#ffd23e" stroke-width="2"/>
+    <text x="639" y="535" font-size="13" letter-spacing="2" fill="#ffd23e" filter="url(#strip-glow)">DRIVE-IN</text>
+    <text x="639" y="552" font-size="11" letter-spacing="3" fill="#ff2e88">24 HRS &#8594;</text>
+  </g>
+
+  <!-- sun shimmer lines on the road -->
+  <g stroke="#ffd23e" stroke-width="2" opacity="0.35">
+    <line x1="300" y1="622" x2="420" y2="622"/>
+    <line x1="288" y1="668" x2="432" y2="668"/>
+    <line x1="272" y1="726" x2="448" y2="726"/>
+  </g>
+
+  <!-- convertible silhouette driving toward the viewer -->
   <g>
-    <rect x="180" y="700" width="360" height="90" rx="22" fill="#ff2e63"/>
-    <rect x="200" y="680" width="320" height="40" rx="18" fill="#ff6b9d"/>
-    <rect x="230" y="660" width="100" height="34" rx="12" fill="#00e5ff" opacity="0.9"/>
-    <rect x="390" y="660" width="100" height="34" rx="12" fill="#00e5ff" opacity="0.9"/>
-    <circle cx="250" cy="800" r="34" fill="#0a0318"/>
-    <circle cx="250" cy="800" r="16" fill="#8fe3e3"/>
-    <circle cx="470" cy="800" r="34" fill="#0a0318"/>
-    <circle cx="470" cy="800" r="16" fill="#8fe3e3"/>
-    <rect x="300" y="716" width="120" height="10" rx="5" fill="#ffe259"/>
-  </g>
-  <g fill="#1c0b33">
-    <path d="M80 660 Q50 520 10 450 Q60 490 70 430 Q80 510 110 560 Q140 500 170 470 Q140 550 130 660 Z"/>
-    <path d="M640 660 Q610 520 570 450 Q620 490 630 430 Q640 510 670 560 Q700 500 720 480 Q700 560 690 660 Z"/>
+    <ellipse cx="360" cy="838" rx="150" ry="14" fill="#000000" opacity="0.45"/>
+    <path d="M268 800 L288 762 Q296 748 318 746 L402 746 Q424 748 432 762 L452 800 Q458 812 442 814 L278 814 Q262 812 268 800 Z" fill="#12041f"/>
+    <path d="M296 762 L312 730 Q318 720 336 720 L384 720 Q402 720 408 730 L424 762 Z" fill="#1d0a33"/>
+    <rect x="318" y="728" width="84" height="26" rx="4" fill="#ff9e5e" opacity="0.85"/>
+    <rect x="272" y="782" width="26" height="12" rx="6" fill="#fff3b0" filter="url(#strip-glow)"/>
+    <rect x="422" y="782" width="26" height="12" rx="6" fill="#fff3b0" filter="url(#strip-glow)"/>
+    <rect x="300" y="800" width="120" height="8" rx="4" fill="#ff2e88" opacity="0.9"/>
   </g>
 </svg>
